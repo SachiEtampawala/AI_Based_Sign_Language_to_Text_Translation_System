@@ -30,9 +30,11 @@ def main():
     print("Mapping videos to sign-language labels...\n")
 
     # Load class labels
+
     labels = load_class_labels()
 
     # Load video information
+    
     with open(JSON_FILE, "r", encoding="utf-8") as file:
         data = json.load(file)
 
