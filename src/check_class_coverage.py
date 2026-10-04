@@ -33,7 +33,7 @@ def main():
     )
     print(sorted(train_classes))
 
-    print("\nValidation classes:")
+    print("\nValidation classes :")
     val_classes = set(
         data[data["subset"] == "val"]["sign"]
     )
