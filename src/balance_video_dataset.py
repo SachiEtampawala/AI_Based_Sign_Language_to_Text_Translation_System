@@ -5,7 +5,6 @@ import mediapipe as mp
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 
-
 DATASET_PATH = Path.home() / "Downloads" / "archive"
 JSON_FILE = DATASET_PATH / "nslt_100.json"
 VIDEOS_FOLDER = DATASET_PATH / "videos"
@@ -14,11 +13,9 @@ PROJECT_PATH = Path(__file__).resolve().parent.parent
 DATASET_FILE = PROJECT_PATH / "outputs" / "landmark_dataset.csv"
 MODEL_FILE = PROJECT_PATH / "models" / "hand_landmarker.task"
 
-
 TARGET_TRAIN_VIDEOS = 5
 VALIDATION_RATIO = 0.15
 TEST_RATIO = 0.15
-
 
 def load_labels():
     class_file = DATASET_PATH / "wlasl_class_list.txt"
@@ -108,12 +105,12 @@ def main():
     print("Creating balanced video-level dataset...\n")
 
     if not DATASET_FILE.exists():
-        print("ERROR: Existing landmark dataset not found:")
+        print("ERROR : Existing landmark dataset not found.")
         print(DATASET_FILE)
         return
 
     if not MODEL_FILE.exists():
-        print("ERROR: MediaPipe model not found:")
+        print("ERROR : MediaPipe model not found.")
         print(MODEL_FILE)
         return
 
@@ -122,9 +119,7 @@ def main():
     with open(JSON_FILE, "r", encoding="utf-8") as file:
         dataset = json.load(file)
 
-    # ---------------------------------------------------------
     # Get one record per video
-    # ---------------------------------------------------------
 
     videos = []
 
@@ -150,9 +145,7 @@ def main():
 
     print(f"Available videos: {len(videos_df)}")
 
-    # ---------------------------------------------------------
     # Create video-level split
-    # ---------------------------------------------------------
 
     train_videos = []
     val_videos = []
@@ -163,6 +156,7 @@ def main():
         video_ids = group["video_id"].tolist()
 
         # Shuffle videos for this sign
+
         random_state = 42
 
         if len(video_ids) >= 3:
@@ -198,31 +192,27 @@ def main():
         for video_id in test_ids:
             test_videos.append((video_id, sign))
 
-    print("\nVideo-level split:")
-    print(f"Training videos   : {len(train_videos)}")
-    print(f"Validation videos : {len(val_videos)}")
-    print(f"Testing videos    : {len(test_videos)}")
+    print("\nVideo-level split  :")
+    print(f"Training videos : {len(train_videos)}")
+    print(f"Validation videos   : {len(val_videos)}")
+    print(f"Testing videos  : {len(test_videos)}")
 
-    # ---------------------------------------------------------
     # Show class distribution
-    # ---------------------------------------------------------
 
     train_df = pd.DataFrame(train_videos, columns=["video_id", "sign"])
     val_df = pd.DataFrame(val_videos, columns=["video_id", "sign"])
     test_df = pd.DataFrame(test_videos, columns=["video_id", "sign"])
 
-    print("\nTraining videos by class:")
+    print("\nTraining videos by class :")
     print(train_df["sign"].value_counts().sort_index())
 
-    print("\nValidation videos by class:")
+    print("\nValidation videos by class :")
     print(val_df["sign"].value_counts().sort_index())
 
-    print("\nTesting videos by class:")
+    print("\nTesting videos by class :")
     print(test_df["sign"].value_counts().sort_index())
 
-    # ---------------------------------------------------------
     # Extract landmarks again using the new video-level split
-    # ---------------------------------------------------------
 
     all_rows = []
 
@@ -252,14 +242,12 @@ def main():
                 f"({len(rows)} frames)"
             )
 
-    # ---------------------------------------------------------
     # Save new dataset
-    # ---------------------------------------------------------
 
     new_data = pd.DataFrame(all_rows)
 
     if new_data.empty:
-        print("\nERROR: No landmark data was created.")
+        print("\nERROR : No landmark data was created.")
         return
 
     feature_columns = [
@@ -280,13 +268,13 @@ def main():
         index=False
     )
 
-    print("\n-----------------------------------")
+    print("\n----------")
     print("New dataset created successfully.")
-    print(f"Total rows: {len(new_data)}")
-    print(f"Total videos: {new_data['video_id'].nunique()}")
-    print(f"Saved to: {DATASET_FILE}")
+    print(f"Total rows : {len(new_data)}")
+    print(f"Total videos : {new_data['video_id'].nunique()}")
+    print(f"Saved to : {DATASET_FILE}")
 
-    print("\nRows by subset:")
+    print("\nRows by subset :")
     print(new_data["subset"].value_counts())
 
     print("\nVideo-level dataset creation completed.")
