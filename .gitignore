@@ -1,20 +1,8 @@
-# Dataset
-dataset/
-*.mp4
-*.avi
-*.mov
-
 # Python
 __pycache__/
 *.pyc
 .venv/
 venv/
-
-# Trained models
-models/
-
-# Generated outputs
-outputs/
 
 # Jupyter
 .ipynb_checkpoints/
