@@ -4,58 +4,34 @@ from pathlib import Path
 PROJECT_PATH = Path(__file__).resolve().parent.parent
 DATASET_FILE = PROJECT_PATH / "outputs" / "landmark_dataset.csv"
 
-def main():
 
-    print("Checking the class coverage...\n")
+def main():
+    print("Checking class coverage...\n")
 
     if not DATASET_FILE.exists():
         print("ERROR : Dataset file not found.")
-        print(DATASET_FILE)
         return
 
     data = pd.read_csv(DATASET_FILE)
 
-    print("Classes in complete dataset :")
-    print(sorted(data["sign"].unique()))
+    videos = data[["video_id", "sign", "subset"]].drop_duplicates()
 
-    print("\nClass distribution by subset :\n")
-
-    coverage = pd.crosstab(
-        data["sign"],
-        data["subset"]
+    print("Videos per sign and subset :")
+    print(
+        pd.crosstab(
+            videos["sign"],
+            videos["subset"]
+        ).to_string()
     )
 
-    print(coverage)
+    train_classes = set(videos.loc[videos["subset"] == "train", "sign"])
+    val_classes = set(videos.loc[videos["subset"] == "val", "sign"])
+    test_classes = set(videos.loc[videos["subset"] == "test", "sign"])
+    all_classes = set(videos["sign"])
 
-    print("\nTraining classes :")
-    train_classes = set(
-        data[data["subset"] == "train"]["sign"]
-    )
-    print(sorted(train_classes))
-
-    print("\nValidation classes :")
-    val_classes = set(
-        data[data["subset"] == "val"]["sign"]
-    )
-    print(sorted(val_classes))
-
-    print("\nTest classes :")
-    test_classes = set(
-        data[data["subset"] == "test"]["sign"]
-    )
-    print(sorted(test_classes))
-
-    print("\nClasses missing from training :")
-
-    missing_from_training = sorted(
-        set(data["sign"].unique()) - train_classes
-    )
-
-    if missing_from_training:
-        for sign in missing_from_training:
-            print(f"- {sign}")
-    else:
-        print("None")
+    print("\nSigns missing from training :", sorted(all_classes - train_classes))
+    print("Signs missing from validation :", sorted(all_classes - val_classes))
+    print("Signs missing from testing :", sorted(all_classes - test_classes))
 
     print("\nClass coverage check completed.")
 
