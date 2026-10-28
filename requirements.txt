@@ -5,3 +5,10 @@ scikit-learn
 mediapipe
 matplotlib
 joblib
+
+# Pipeline: LLM interpretation + voice output
+anthropic
+pyttsx3
+
+# Development
+pytest

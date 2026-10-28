@@ -9,3 +9,16 @@ venv/
 
 # VS Code
 .vscode/
+
+# Secrets
+.env
+
+# Downloaded at setup time by scripts/download_models.py (not stored in Git LFS)
+models/face_landmarker.task
+
+# Demo recordings
+outputs/demo/
+*.mp4
+
+# Test caches
+.pytest_cache/
