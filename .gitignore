@@ -9,3 +9,7 @@ venv/
 
 # VS Code
 .vscode/
+
+dataset/
+*.mp4
+.env
