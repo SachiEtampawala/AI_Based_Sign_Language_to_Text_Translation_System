@@ -6,6 +6,8 @@ import numpy as np
 from pathlib import Path
 from collections import deque, Counter
 
+from features import normalize_landmarks
+
 # Project paths
 PROJECT_PATH = Path(__file__).resolve().parent.parent
 MODEL_FILE = PROJECT_PATH / "models" / "sign_recognition_model.pkl"
@@ -67,6 +69,9 @@ def main():
     last_prediction = "Show your hand"
     last_confidence = 0.0
 
+    # VIDEO mode needs steadily increasing timestamps (milliseconds)
+    timestamp_ms = 0
+
     try:
         with HandLandmarker.create_from_options(options) as landmarker:
 
@@ -81,10 +86,7 @@ def main():
                 frame = cv2.flip(frame, 1)
 
                 # Convert the frame to RGB for MediaPipe
-                rgb_frame = cv2.cvtColor(
-                    frame,
-                    cv2.COLOR_BGR2RGB
-                )
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
                 # Create a MediaPipe image
                 mp_image = mp.Image(
@@ -92,23 +94,10 @@ def main():
                     data=rgb_frame
                 )
 
-                # VIDEO mode requires a timestamp in milliseconds
-                timestamp_ms = int(
-                    camera.get(cv2.CAP_PROP_POS_MSEC)
-                )
-
-                # Use a steadily increasing timestamp for live camera frames
-                if not hasattr(main, "frame_timestamp"):
-                    main.frame_timestamp = 0
-
-                main.frame_timestamp += 33
-                timestamp_ms = main.frame_timestamp
+                timestamp_ms += 33
 
                 # Detect the hand
-                result = landmarker.detect_for_video(
-                    mp_image,
-                    timestamp_ms
-                )
+                result = landmarker.detect_for_video(mp_image, timestamp_ms)
 
                 if result.hand_landmarks:
                     hand = result.hand_landmarks[0]
@@ -119,29 +108,18 @@ def main():
                     for landmark in hand:
                         x = int(landmark.x * width)
                         y = int(landmark.y * height)
+                        cv2.circle(frame, (x, y), 4, (0, 255, 0), -1)
 
-                        cv2.circle(
-                            frame,
-                            (x, y),
-                            4,
-                            (0, 255, 0),
-                            -1
-                        )
-
-                    # Build the same 63 features used during training
+                    # Build the 63 raw features (21 points x, y, z)
                     features = []
 
                     for landmark in hand:
-                        features.extend([
-                            landmark.x,
-                            landmark.y,
-                            landmark.z
-                        ])
+                        features.extend([landmark.x, landmark.y, landmark.z])
 
-                    features = np.array(
-                        features,
-                        dtype=np.float32
-                    ).reshape(1, -1)
+                    features = np.array(features, dtype=np.float32)
+
+                    # Same normalization as training
+                    features = normalize_landmarks(features).reshape(1, -1)
 
                     # Predict the sign
                     prediction = model.predict(features)[0]
@@ -172,7 +150,7 @@ def main():
                     last_prediction = "Show your hand"
                     last_confidence = 0.0
 
-                # Display the recognized text below the camera image
+                # Display the recognized text at the top of the camera image
                 cv2.rectangle(
                     frame,
                     (0, 0),
@@ -201,10 +179,7 @@ def main():
                     2
                 )
 
-                cv2.imshow(
-                    "AI Sign Language Recognition",
-                    frame
-                )
+                cv2.imshow("AI Sign Language Recognition", frame)
 
                 # Press Q to exit
                 if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -214,7 +189,6 @@ def main():
         camera.release()
         cv2.destroyAllWindows()
         print("\nWebcam recognition stopped.")
-
 
 if __name__ == "__main__":
     main()
