@@ -7,7 +7,7 @@ import joblib
 from features import normalize_landmarks
 
 PROJECT_PATH = Path(__file__).resolve().parent.parent
-DATASET_FILE = PROJECT_PATH / "outputs" / "landmark_dataset.csv"
+DATASET_FILE = PROJECT_PATH / "outputs" / "landmark_dataset_2hands.csv"
 MODEL_FOLDER = PROJECT_PATH / "models"
 MODEL_FILE = MODEL_FOLDER / "sign_recognition_model.pkl"
 
@@ -17,8 +17,9 @@ def main():
     print("Training sign recognition model...\n")
 
     if not DATASET_FILE.exists():
-        print("ERROR : Landmark dataset not found.")
+        print("ERROR : Two-hand landmark dataset not found.")
         print(DATASET_FILE)
+        print("Run  python src/build_dataset.py  first.")
         return
 
     data = pd.read_csv(DATASET_FILE)
@@ -42,10 +43,13 @@ def main():
     X_test = normalize_landmarks(test_data[feature_columns].values)
     y_test = test_data["sign"]
 
-    print(f"Training samples : {len(X_train)}")
-    print(f"Validation samples : {len(X_val)}")
-    print(f"Testing samples : {len(X_test)}")
-    print(f"Features : {len(feature_columns)}")
+    print(f"Training samples : {len(X_train)} "
+          f"({train_data['video_id'].nunique()} videos)")
+    print(f"Validation samples : {len(X_val)} "
+          f"({val_data['video_id'].nunique()} videos)")
+    print(f"Testing samples : {len(X_test)} "
+          f"({test_data['video_id'].nunique()} videos)")
+    print(f"Features : {X_train.shape[1]}")
 
     print("\nTraining classes :")
     print(sorted(y_train.unique()))
@@ -92,7 +96,6 @@ def main():
     print(MODEL_FILE)
 
     print("\nSign recognition model training completed.")
-
 
 if __name__ == "__main__":
     main()
