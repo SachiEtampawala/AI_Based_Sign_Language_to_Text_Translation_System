@@ -15,8 +15,9 @@ MODEL_FILE = PROJECT_PATH / "models" / "sign_recognition_model.pkl"
 HAND_MODEL_FILE = PROJECT_PATH / "models" / "hand_landmarker.task"
 
 # Settings
-CONFIDENCE_THRESHOLD = 0.40
-STABLE_FRAMES = 10          # frames a sign must be held to become a word
+CONFIDENCE_THRESHOLD = 0.60   # below this the sign is treated as "uncertain"
+STABLE_FRAMES = 12            # frames a sign must be held to become a word
+WINDOW_NAME = "AI Sign Language Recognition"
 PREDICTION_HISTORY = deque(maxlen=7)
 
 # Colors (BGR)
@@ -69,9 +70,18 @@ def draw_overlay(frame, sign, confidence, word_buffer, hand_count=0):
     # Top bar
     cv2.rectangle(frame, (0, 0), (width, 100), DARK, -1)
 
+    # Shrink the text if needed so it never runs into the right-hand panel
+    sign_text = "Recognized Sign: " + sign
+    sign_scale = 0.9
+    max_text_width = width - 260
+    while sign_scale > 0.5 and cv2.getTextSize(
+        sign_text, cv2.FONT_HERSHEY_SIMPLEX, sign_scale, 2
+    )[0][0] > max_text_width:
+        sign_scale -= 0.05
+
     cv2.putText(
-        frame, "Recognized Sign: " + sign, (20, 40),
-        cv2.FONT_HERSHEY_SIMPLEX, 0.9, WHITE, 2
+        frame, sign_text, (20, 40),
+        cv2.FONT_HERSHEY_SIMPLEX, sign_scale, WHITE, 2
     )
     cv2.putText(
         frame, f"Confidence: {confidence:.0%}", (20, 75),
@@ -125,7 +135,7 @@ def draw_overlay(frame, sign, confidence, word_buffer, hand_count=0):
         cv2.FONT_HERSHEY_SIMPLEX, 0.8, WHITE, 2
     )
     cv2.putText(
-        frame, "Backspace = delete last word   C = clear   Q = quit",
+        frame, "Backspace = delete last word   C = clear   Q or Esc = quit",
         (20, height - 12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (180, 180, 180), 1
     )
 
@@ -187,7 +197,7 @@ def main():
     print("\nCamera started.")
     print("Show one or two hands to the camera.")
     print("Hold a sign steady to add it to the sentence.")
-    print("Backspace = delete last word | C = clear | Q = quit\n")
+    print("Backspace = delete last word | C = clear | Q or Esc = quit\n")
 
     last_prediction = "Show your hand"
     last_confidence = 0.0
@@ -270,11 +280,16 @@ def main():
                     word_buffer, hand_count=len(hands)
                 )
 
-                cv2.imshow("AI Sign Language Recognition", frame)
+                cv2.imshow(WINDOW_NAME, frame)
 
                 key = cv2.waitKey(1) & 0xFF
 
-                if key == ord("q"):
+                # Quit with Q or Esc
+                if key in (ord("q"), 27):
+                    break
+
+                # Quit when the window's X button is clicked
+                if cv2.getWindowProperty(WINDOW_NAME, cv2.WND_PROP_VISIBLE) < 1:
                     break
                 elif key == 8:                 # Backspace
                     word_buffer.remove_last()
