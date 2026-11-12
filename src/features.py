@@ -5,6 +5,7 @@ HAND_SIZE = NUM_LANDMARKS * 3            # x, y, z for each point = 63
 MAX_HANDS = 2
 RAW_SIZE = HAND_SIZE * MAX_HANDS         # 126 raw numbers for two hands
 FEATURE_SIZE = RAW_SIZE + 3              # 126 normalized + 3 hand-to-hand offset
+NO_SIGN_LABEL = "none"                   # class for resting hand / no sign
 
 
 def hands_to_vector(hands):
