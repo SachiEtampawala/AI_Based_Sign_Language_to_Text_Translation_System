@@ -6,7 +6,9 @@ import numpy as np
 from pathlib import Path
 from collections import deque, Counter
 
-from features import hands_to_vector, normalize_landmarks, FEATURE_SIZE
+from features import (
+    hands_to_vector, normalize_landmarks, FEATURE_SIZE, NO_SIGN_LABEL
+)
 from sentence_builder import WordBuffer
 
 # Project paths
@@ -249,7 +251,16 @@ def main():
                     else:
                         confidence = 1.0
 
-                    if confidence >= CONFIDENCE_THRESHOLD:
+                    if confidence >= CONFIDENCE_THRESHOLD and \
+                            str(prediction) == NO_SIGN_LABEL:
+                        # Resting hand / no sign: the same word can be signed again
+                        PREDICTION_HISTORY.clear()
+                        last_prediction = "No sign"
+                        last_confidence = confidence
+
+                        word_buffer.hand_lost()
+
+                    elif confidence >= CONFIDENCE_THRESHOLD:
                         PREDICTION_HISTORY.append(str(prediction))
 
                         # Most frequent recent prediction (smoothing)
@@ -300,6 +311,7 @@ def main():
         camera.release()
         cv2.destroyAllWindows()
         print("\nWebcam recognition stopped.")
+
 
 if __name__ == "__main__":
     main()
